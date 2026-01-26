@@ -66,8 +66,41 @@ def download_taf(sigla: str, output_dir: Path, session: requests.Session) -> tup
     if output_file.exists():
         return (sigla, True, "già esistente")
 
-    url = "http://fiduciali.altervista.org/download_taf.php"
+    # Prova prima AdE (Agenzia delle Entrate) - fonte ufficiale
+    # Codice ufficio = sigla provincia + numero (es. UD1, RM1, MI1)
+    for suffix in ["1", "2", "3", ""]:
+        iduff = f"{sigla}{suffix}"
+        url = f"https://www1.agenziaentrate.gov.it/servizi/TafDis/download.php?tipofile=TAF&iduff={iduff}"
 
+        try:
+            # Prima richiesta potrebbe fallire, riprova
+            for attempt in range(2):
+                response = session.get(url, timeout=60)
+
+                if response.status_code == 200 and len(response.content) > 500:
+                    content = response.content
+
+                    # Verifica che sia un TAF valido (inizia con codice foglio)
+                    if content[:1].isalpha() or content[:1].isdigit():
+                        output_file.write_bytes(content)
+                        return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (AdE)")
+
+                    # ZIP file
+                    if content[:2] == b"PK":
+                        with zipfile.ZipFile(BytesIO(content)) as zf:
+                            for name in zf.namelist():
+                                if name.upper().endswith(".TAF"):
+                                    with zf.open(name) as f:
+                                        output_file.write_bytes(f.read())
+                                    return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (AdE)")
+
+                time.sleep(1)  # Pausa tra tentativi
+
+        except Exception:
+            continue
+
+    # Fallback: Altervista
+    url = "http://fiduciali.altervista.org/download_taf.php"
     try:
         response = session.post(
             url,
@@ -78,7 +111,6 @@ def download_taf(sigla: str, output_dir: Path, session: requests.Session) -> tup
         if response.status_code == 200 and len(response.content) > 500:
             content = response.content
 
-            # ZIP file
             if content[:2] == b"PK":
                 with zipfile.ZipFile(BytesIO(content)) as zf:
                     for name in zf.namelist():
@@ -87,14 +119,13 @@ def download_taf(sigla: str, output_dir: Path, session: requests.Session) -> tup
                                 output_file.write_bytes(f.read())
                             return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB")
             else:
-                # File diretto
                 output_file.write_bytes(content)
                 return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB")
 
-        return (sigla, False, f"HTTP {response.status_code}")
-
     except Exception as e:
-        return (sigla, False, str(e)[:50])
+        pass
+
+    return (sigla, False, "nessuna fonte disponibile")
 
 
 def main():
