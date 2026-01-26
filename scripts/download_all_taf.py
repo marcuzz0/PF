@@ -66,15 +66,16 @@ def download_taf(sigla: str, output_dir: Path, session: requests.Session) -> tup
     if output_file.exists():
         return (sigla, True, "già esistente")
 
-    # Prova prima AdE (Agenzia delle Entrate) - fonte ufficiale
-    # Codice ufficio = sigla provincia + numero (es. UD1, RM1, MI1)
+    # AdE (Agenzia delle Entrate) - fonte ufficiale
+    # URL: http://www1.agenziaentrate.gov.it/servizi/TafDis/download.php?&tipofile=TAF&iduff=BO1
     for suffix in ["1", "2", "3", ""]:
         iduff = f"{sigla}{suffix}"
-        url = f"https://www1.agenziaentrate.gov.it/servizi/TafDis/download.php?tipofile=TAF&iduff={iduff}"
+        url = f"http://www1.agenziaentrate.gov.it/servizi/TafDis/download.php?&tipofile=TAF&iduff={iduff}"
 
-        try:
-            # Prima richiesta potrebbe fallire, riprova
-            for attempt in range(2):
+        # Riprova più volte - il server a volte non risponde al primo tentativo
+        for attempt in range(3):
+            try:
+                time.sleep(2)  # Delay tra tentativi
                 response = session.get(url, timeout=60)
 
                 if response.status_code == 200 and len(response.content) > 500:
@@ -94,10 +95,9 @@ def download_taf(sigla: str, output_dir: Path, session: requests.Session) -> tup
                                         output_file.write_bytes(f.read())
                                     return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (AdE)")
 
-                time.sleep(1)  # Pausa tra tentativi
-
-        except Exception:
-            continue
+            except Exception:
+                time.sleep(2)  # Pausa extra in caso di errore
+                continue
 
     # Fallback: Altervista
     url = "http://fiduciali.altervista.org/download_taf.php"
@@ -163,7 +163,7 @@ def main():
             print(f"FALLITO ({msg})")
             failed.append(sigla)
 
-        time.sleep(0.5)  # Rate limiting
+        time.sleep(2)  # Rate limiting - il server AdE richiede pause più lunghe
 
     print()
     print("=" * 60)

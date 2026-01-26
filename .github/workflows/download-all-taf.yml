@@ -9,7 +9,7 @@ permissions:
 jobs:
   download:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60  # Più tempo per retry e delay
 
     steps:
       - name: Checkout repository
