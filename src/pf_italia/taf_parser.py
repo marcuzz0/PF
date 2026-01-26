@@ -158,28 +158,49 @@ class TafParser:
         # Gestione foglio con codice speciale (10, 11 -> A, B)
         foglio = self._parse_foglio(foglio_raw)
 
-        # Coordinate
-        coord_nord = self._parse_coordinate(get_field("coord_nord"))
-        coord_est = self._parse_coordinate(get_field("coord_est"))
+        # Coordinate - usa regex per trovare i valori numerici grandi
+        # Pattern: cerca due numeri decimali consecutivi (Nord ed Est)
+        coord_nord = 0.0
+        coord_est = 0.0
+        quota = 9999.0
+
+        # Cerca coordinate con regex (più robusto delle posizioni fisse)
+        # Pattern per coordinate Gauss-Boaga: numeri > 1.000.000
+        coord_match = re.search(
+            r'(\d{6,7}(?:\.\d+)?)\s+(\d{6,7}(?:\.\d+)?)\s+(\d{1,4}(?:\.\d+)?)',
+            line
+        )
+        if coord_match:
+            coord_nord = float(coord_match.group(1))
+            coord_est = float(coord_match.group(2))
+            quota = float(coord_match.group(3))
+        else:
+            # Fallback: prova con posizioni fisse
+            coord_nord = self._parse_coordinate(get_field("coord_nord"))
+            coord_est = self._parse_coordinate(get_field("coord_est"))
+            quota = self._parse_quota(get_field("quota"))
 
         if coord_nord == 0.0 and coord_est == 0.0:
             return None
 
-        # Quota
-        quota = self._parse_quota(get_field("quota"))
+        # Attendibilita - cerca pattern 4 cifre dopo quota
+        attend_plan = AttendibilitaPlanimetrica.NON_DISPONIBILE
+        attend_altim = AttendibilitaAltimetrica.NON_DISPONIBILE
 
-        # Attendibilita
-        attend_plan = self._parse_attendibilita_plan(get_field("attend_plan"))
-        attend_altim = self._parse_attendibilita_altim(get_field("attend_altim"))
+        attend_match = re.search(r'\d+\.\d+\s*(\d{2})(\d{2})', line)
+        if attend_match:
+            attend_plan = self._parse_attendibilita_plan(attend_match.group(1))
+            attend_altim = self._parse_attendibilita_altim(attend_match.group(2))
 
         # Descrizioni
         descr_plan = get_field("descr_plan")
         descr_altim = get_field("descr_altim")
 
-        # Monografia
-        has_mono_flag = get_field("has_monografia")
-        has_monografia = has_mono_flag != "0" and has_mono_flag != ""
-        mono_info = get_field("monografia_info")
+        # Monografia - ultimo carattere della riga
+        has_monografia = False
+        if len(line.strip()) > 0:
+            last_char = line.strip()[-1]
+            has_monografia = last_char != "0" and last_char.isdigit()
 
         # Causale aggiornamento
         causale = get_field("causale") or None
@@ -203,7 +224,7 @@ class TafParser:
             descrizione_plan=descr_plan,
             descrizione_altim=descr_altim,
             ha_monografia=has_monografia,
-            data_monografia=mono_info if has_monografia else None,
+            data_monografia=None,
             causale_aggiornamento=causale,
         )
 
