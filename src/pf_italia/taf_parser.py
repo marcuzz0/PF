@@ -165,15 +165,23 @@ class TafParser:
         quota = 9999.0
 
         # Cerca coordinate con regex (più robusto delle posizioni fisse)
-        # Pattern per coordinate Gauss-Boaga: numeri > 1.000.000
+        # Pattern per formato TAF reale: Nord Est Quota+Attendibilità
+        # Es: 04620422.591 1766631.10  047.660102BASAMENTO
+        # Dove 047.66 è quota e 0102 è attendibilità (plan+altim)
         coord_match = re.search(
-            r'(\d{6,7}(?:\.\d+)?)\s+(\d{6,7}(?:\.\d+)?)\s+(\d{1,4}(?:\.\d+)?)',
+            r'(\d{7,8}(?:\.\d+)?)\s+(\d{6,7}(?:\.\d+)?)\s+(-?\d{1,3}\.\d{2})(\d{2})(\d{2})',
             line
         )
+
+        attend_plan = AttendibilitaPlanimetrica.NON_DISPONIBILE
+        attend_altim = AttendibilitaAltimetrica.NON_DISPONIBILE
+
         if coord_match:
             coord_nord = float(coord_match.group(1))
             coord_est = float(coord_match.group(2))
             quota = float(coord_match.group(3))
+            attend_plan = self._parse_attendibilita_plan(coord_match.group(4))
+            attend_altim = self._parse_attendibilita_altim(coord_match.group(5))
         else:
             # Fallback: prova con posizioni fisse
             coord_nord = self._parse_coordinate(get_field("coord_nord"))
@@ -182,15 +190,6 @@ class TafParser:
 
         if coord_nord == 0.0 and coord_est == 0.0:
             return None
-
-        # Attendibilita - cerca pattern 4 cifre dopo quota
-        attend_plan = AttendibilitaPlanimetrica.NON_DISPONIBILE
-        attend_altim = AttendibilitaAltimetrica.NON_DISPONIBILE
-
-        attend_match = re.search(r'\d+\.\d+\s*(\d{2})(\d{2})', line)
-        if attend_match:
-            attend_plan = self._parse_attendibilita_plan(attend_match.group(1))
-            attend_altim = self._parse_attendibilita_altim(attend_match.group(2))
 
         # Descrizioni
         descr_plan = get_field("descr_plan")
