@@ -1,0 +1,52 @@
+name: Download ALL TAF Files
+
+on:
+  workflow_dispatch:  # Solo click, nessun parametro
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: claude/cadastral-points-automation-niqBl
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Create data directory
+        run: mkdir -p data/taf
+
+      - name: Download ALL TAF files
+        run: python scripts/download_all_taf.py
+        continue-on-error: true
+
+      - name: Show results
+        run: |
+          echo "=== FILE SCARICATI ==="
+          ls -la data/taf/*.TAF 2>/dev/null | wc -l | xargs echo "Totale:"
+          ls -la data/taf/*.TAF 2>/dev/null || echo "Nessun file"
+
+      - name: Commit and push
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add data/taf/*.TAF 2>/dev/null || true
+          git diff --staged --quiet || git commit -m "chore: Add TAF files (automated)"
+          git push || echo "Push failed"
+
+      - name: Upload as artifact (backup)
+        uses: actions/upload-artifact@v4
+        with:
+          name: taf-files-all
+          path: data/taf/*.TAF
+          retention-days: 30
+          if-no-files-found: warn
