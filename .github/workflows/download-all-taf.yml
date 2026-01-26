@@ -3,6 +3,9 @@ name: Download ALL TAF Files
 on:
   workflow_dispatch:  # Solo click, nessun parametro
 
+permissions:
+  contents: write  # Permesso per push
+
 jobs:
   download:
     runs-on: ubuntu-latest
