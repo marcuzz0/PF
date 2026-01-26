@@ -27,16 +27,23 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests beautifulsoup4 lxml
+          pip install requests beautifulsoup4 lxml selenium webdriver-manager
 
       - name: Create data directory
         run: mkdir -p data/taf
 
-      - name: Download TAF files
+      - name: Download TAF files (Selenium)
         run: |
-          python scripts/download_taf_manual.py \
+          # Prova prima con Selenium (bypassa protezioni anti-bot)
+          python scripts/download_taf_selenium.py \
             ${{ inputs.provinces == 'all' && '--all' || format('--province {0}', inputs.provinces) }} \
             ${{ inputs.force && '--force' || '' }} \
+            --headless \
+            --output data/taf || echo "Selenium fallito, provo metodo diretto"
+
+          # Fallback al metodo diretto per file mancanti
+          python scripts/download_taf_manual.py \
+            ${{ inputs.provinces == 'all' && '--all' || format('--province {0}', inputs.provinces) }} \
             --output data/taf
 
       - name: List downloaded files
