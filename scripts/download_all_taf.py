@@ -67,37 +67,36 @@ def download_taf(sigla: str, output_dir: Path, session: requests.Session) -> tup
         return (sigla, True, "già esistente")
 
     # AdE (Agenzia delle Entrate) - fonte ufficiale
-    # URL: http://www1.agenziaentrate.gov.it/servizi/TafDis/download.php?&tipofile=TAF&iduff=BO1
-    for suffix in ["1", "2", "3", ""]:
-        iduff = f"{sigla}{suffix}"
-        url = f"http://www1.agenziaentrate.gov.it/servizi/TafDis/download.php?&tipofile=TAF&iduff={iduff}"
+    # URL: https://www1.agenziaentrate.gov.it/servizi/TafDis/download.php?&tipofile=TAF&iduff=AG1
+    iduff = f"{sigla}1"
+    url = f"https://www1.agenziaentrate.gov.it/servizi/TafDis/download.php?&tipofile=TAF&iduff={iduff}"
 
-        # Riprova più volte - il server AdE è instabile
-        for attempt in range(5):  # 5 tentativi invece di 3
-            try:
-                time.sleep(3)  # Delay più lungo tra tentativi
-                response = session.get(url, timeout=60)
+    # Riprova più volte - il server AdE è instabile
+    for attempt in range(5):
+        try:
+            time.sleep(3)  # Delay tra tentativi
+            response = session.get(url, timeout=60)
 
-                if response.status_code == 200 and len(response.content) > 500:
-                    content = response.content
+            if response.status_code == 200 and len(response.content) > 500:
+                content = response.content
 
-                    # Verifica che sia un TAF valido (inizia con codice foglio)
-                    if content[:1].isalpha() or content[:1].isdigit():
-                        output_file.write_bytes(content)
-                        return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (AdE)")
+                # Verifica che sia un TAF valido (inizia con codice foglio)
+                if content[:1].isalpha() or content[:1].isdigit():
+                    output_file.write_bytes(content)
+                    return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (AdE)")
 
-                    # ZIP file
-                    if content[:2] == b"PK":
-                        with zipfile.ZipFile(BytesIO(content)) as zf:
-                            for name in zf.namelist():
-                                if name.upper().endswith(".TAF"):
-                                    with zf.open(name) as f:
-                                        output_file.write_bytes(f.read())
-                                    return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (AdE)")
+                # ZIP file
+                if content[:2] == b"PK":
+                    with zipfile.ZipFile(BytesIO(content)) as zf:
+                        for name in zf.namelist():
+                            if name.upper().endswith(".TAF"):
+                                with zf.open(name) as f:
+                                    output_file.write_bytes(f.read())
+                                return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (AdE)")
 
-            except Exception:
-                time.sleep(3)  # Pausa extra in caso di errore
-                continue
+        except Exception:
+            time.sleep(3)  # Pausa extra in caso di errore
+            continue
 
     # Fallback: Altervista
     url = "http://fiduciali.altervista.org/download_taf.php"
