@@ -59,13 +59,13 @@ PROVINCE = {
 }
 
 # Codici ufficio AdE alternativi per alcune province
-# Fonte: pagine uffici territoriali AdE
+# Alcune province usano vecchi codici (pre-riforma)
 CODICI_UFFICIO_ADE = {
-    "AR": ["AR1", "KJ6"],      # Arezzo - codice ufficio KJ6
-    "FC": ["FC1", "KC1"],      # Forlì-Cesena - codice ufficio KC1
-    "PU": ["PU1", "KA5"],      # Pesaro-Urbino - codice ufficio KA5
-    "BZ": ["BZ1"],             # Bolzano - prova standard
-    "TN": ["TN1"],             # Trento - prova standard
+    "AR": ["AR1"],             # Arezzo
+    "FC": ["FO1"],             # Forlì-Cesena → vecchio codice FO (Forlì)
+    "PU": ["PS1"],             # Pesaro-Urbino → vecchio codice PS (Pesaro)
+    "BZ": ["BZ1"],             # Bolzano
+    "TN": ["TN1"],             # Trento
 }
 
 # Province nuove i cui dati sono nelle province madri
