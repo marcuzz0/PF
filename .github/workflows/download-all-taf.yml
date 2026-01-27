@@ -44,11 +44,11 @@ jobs:
         run: |
           echo "=== RISULTATO FINALE ==="
           TOTAL=$(ls data/taf/*.TAF 2>/dev/null | wc -l)
-          echo "Totale file TAF: $TOTAL / 107 province"
-          if [ "$TOTAL" -eq 107 ]; then
+          echo "Totale file TAF: $TOTAL / 103 province"
+          if [ "$TOTAL" -ge 103 ]; then
             echo "✅ TUTTE LE PROVINCE SCARICATE!"
           else
-            MISSING=$((107 - TOTAL))
+            MISSING=$((103 - TOTAL))
             echo "⚠️ Mancano $MISSING province"
             echo "Rilancia il workflow per riprovare i file mancanti"
           fi
