@@ -16,7 +16,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: claude/cadastral-points-automation-niqBl
-          fetch-depth: 0  # Fetch tutto per avere i file esistenti
+          fetch-depth: 0
+          token: ${{ github.token }}  # Necessario per push
 
       - name: Check existing TAF files
         run: |
@@ -59,9 +60,21 @@ jobs:
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
+
+          # Mostra file da aggiungere
+          echo "=== FILE DA COMMITTARE ==="
+          git status --short
+
+          # Aggiungi e committa
           git add data/taf/*.TAF 2>/dev/null || true
-          git diff --staged --quiet || git commit -m "chore: Add TAF files (automated)"
-          git push || echo "Push failed"
+
+          if git diff --staged --quiet; then
+            echo "Nessun nuovo file da committare"
+          else
+            git commit -m "chore: Add TAF files (automated)"
+            echo "=== PUSH ==="
+            git push -v origin claude/cadastral-points-automation-niqBl
+          fi
 
       - name: Upload as artifact (backup)
         uses: actions/upload-artifact@v4
