@@ -67,15 +67,16 @@ venv.bak/
 *~
 
 # Project specific
-data/
-*.TAF
-*.taf
 *.db
 *.sqlite
 *.sqlite3
 *.geojson
 *.json
 !pyproject.toml
+
+# Allow TAF files in data/taf/
+!data/taf/
+!data/taf/*.TAF
 
 # Logs
 *.log
