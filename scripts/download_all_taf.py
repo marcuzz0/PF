@@ -72,7 +72,7 @@ def download_taf(sigla: str, output_dir: Path, session: requests.Session) -> tup
     url = f"https://www1.agenziaentrate.gov.it/servizi/TafDis/download.php?&tipofile=TAF&iduff={iduff}"
 
     # Riprova più volte - il server AdE è instabile
-    for attempt in range(1):  # Un solo tentativo, i mancanti si riscaricano al prossimo run
+    for attempt in range(5):  # 5 tentativi per provincia
         try:
             time.sleep(1)  # 1 secondo di pausa
             response = session.get(url, timeout=60)

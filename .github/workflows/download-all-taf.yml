@@ -9,7 +9,7 @@ permissions:
 jobs:
   download:
     runs-on: ubuntu-latest
-    timeout-minutes: 30  # ~3 min per run, rilancia per i mancanti
+    timeout-minutes: 60  # 5 tentativi per provincia
 
     steps:
       - name: Checkout repository
