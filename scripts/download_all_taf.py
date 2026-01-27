@@ -133,8 +133,25 @@ def main():
     print("=" * 60)
     print("DOWNLOAD TAF - Punti Fiduciali Italia")
     print("=" * 60)
-    print(f"Province: {len(PROVINCE)}")
+
+    # Check iniziale: quali province mancano?
+    esistenti = {f.stem.upper() for f in output_dir.glob("*.TAF")}
+    tutte = set(PROVINCE.keys())
+    mancanti = sorted(tutte - esistenti)
+
+    print(f"Province totali: {len(PROVINCE)}")
+    print(f"Già scaricate:   {len(esistenti)}")
+    print(f"Da scaricare:    {len(mancanti)}")
     print(f"Output: {output_dir.absolute()}")
+    print()
+
+    if not mancanti:
+        print("Tutte le province sono già scaricate!")
+        total_size = sum(f.stat().st_size for f in output_dir.glob("*.TAF"))
+        print(f"Dimensione totale: {total_size/1024/1024:.1f} MB")
+        return
+
+    print(f"Province mancanti: {', '.join(mancanti)}")
     print()
 
     session = requests.Session()
@@ -148,9 +165,10 @@ def main():
     success = 0
     failed = []
 
-    # Download sequenziale con progress
-    for i, (sigla, nome) in enumerate(PROVINCE.items(), 1):
-        print(f"[{i:3d}/107] {sigla} ({nome})... ", end="", flush=True)
+    # Download solo province mancanti
+    for i, sigla in enumerate(mancanti, 1):
+        nome = PROVINCE.get(sigla, sigla)
+        print(f"[{i:3d}/{len(mancanti)}] {sigla} ({nome})... ", end="", flush=True)
 
         sig, ok, msg = download_taf(sigla, output_dir, session)
 
@@ -165,21 +183,22 @@ def main():
 
     print()
     print("=" * 60)
-    print(f"COMPLETATO: {success}/107 scaricati")
+    print(f"SCARICATI: {success}/{len(mancanti)}")
 
     if failed:
         print(f"FALLITI: {', '.join(failed)}")
 
-    # Calcola dimensione totale
+    # Calcola totali finali
+    totale_scaricati = len(list(output_dir.glob("*.TAF")))
     total_size = sum(f.stat().st_size for f in output_dir.glob("*.TAF"))
+    print(f"TOTALE PROVINCE: {totale_scaricati}/107")
     print(f"Dimensione totale: {total_size/1024/1024:.1f} MB")
     print()
 
-    # Suggerisci push
-    print("Per caricare su GitHub:")
-    print("  git add data/taf/*.TAF")
-    print('  git commit -m "chore: Add TAF files for all provinces"')
-    print("  git push")
+    if failed:
+        print("Per ritentare le province fallite, rilancia lo script.")
+    elif totale_scaricati == 107:
+        print("Tutte le 107 province scaricate con successo!")
 
 
 if __name__ == "__main__":
