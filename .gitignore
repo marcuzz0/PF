@@ -78,6 +78,13 @@ venv.bak/
 !data/taf/
 !data/taf/*.TAF
 
+# Allow WGS84 output
+!data/wgs84/
+!data/wgs84/*.csv
+!data/wgs84/*.geojson
+!data/wgs84/per_provincia/
+!data/wgs84/per_provincia/*.csv
+
 # Logs
 *.log
 logs/

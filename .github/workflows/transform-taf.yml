@@ -1,0 +1,64 @@
+name: Transform TAF to WGS84
+
+on:
+  workflow_dispatch:  # Manuale
+  workflow_run:       # Automatico dopo download
+    workflows: ["Download ALL TAF Files"]
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  transform:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: claude/cadastral-points-automation-niqBl
+          fetch-depth: 0
+          token: ${{ github.token }}
+
+      - name: Check TAF files
+        run: |
+          echo "=== FILE TAF DISPONIBILI ==="
+          ls data/taf/*.TAF 2>/dev/null | wc -l | xargs echo "Totale:"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install pyproj
+
+      - name: Transform to WGS84
+        run: |
+          python scripts/transform_to_wgs84.py
+
+      - name: Show results
+        run: |
+          echo "=== OUTPUT WGS84 ==="
+          ls -la data/wgs84/ 2>/dev/null || echo "Nessun output"
+          if [ -f data/wgs84/punti_fiduciali.csv ]; then
+            echo ""
+            echo "=== ANTEPRIMA CSV ==="
+            head -20 data/wgs84/punti_fiduciali.csv
+          fi
+
+      - name: Commit and push
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add data/wgs84/ 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "Nessun nuovo file da committare"
+          else
+            git commit -m "chore: Add WGS84 transformed data"
+            git push -v origin claude/cadastral-points-automation-niqBl
+          fi
