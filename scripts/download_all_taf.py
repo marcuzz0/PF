@@ -61,20 +61,19 @@ PROVINCE = {
 # Codici ufficio AdE alternativi per alcune province
 # Fonte: pagine uffici territoriali AdE
 CODICI_UFFICIO_ADE = {
-    "AR": ["AR1", "JC1"],      # Arezzo
-    "FC": ["FC1", "KC1"],      # Forlì-Cesena
-    "PU": ["PU1", "KA5"],      # Pesaro-Urbino
+    "AR": ["AR1", "KJ6"],      # Arezzo - codice ufficio KJ6
+    "FC": ["FC1", "KC1"],      # Forlì-Cesena - codice ufficio KC1
+    "PU": ["PU1", "KA5"],      # Pesaro-Urbino - codice ufficio KA5
+    "BZ": ["BZ1"],             # Bolzano - prova standard
+    "TN": ["TN1"],             # Trento - prova standard
 }
-
-# Province senza TAF (sistema catastale Tavolare)
-PROVINCE_SENZA_TAF = {"BZ", "TN"}
 
 # Province nuove i cui dati sono nelle province madri
 PROVINCE_NUOVE = {
-    "BT": "BA",  # Barletta-Andria-Trani → Bari
-    "FM": "AP",  # Fermo → Ascoli Piceno
-    "MB": "MI",  # Monza-Brianza → Milano
-    "SU": "CA",  # Sud Sardegna → Cagliari
+    "BT": "BA",  # Barletta-Andria-Trani → Bari (2004)
+    "FM": "AP",  # Fermo → Ascoli Piceno (2009)
+    "MB": "MI",  # Monza-Brianza → Milano (2009)
+    "SU": "CA",  # Sud Sardegna → Cagliari (2016)
 }
 
 
@@ -84,10 +83,6 @@ def download_taf(sigla: str, output_dir: Path, session: requests.Session) -> tup
 
     if output_file.exists():
         return (sigla, True, "già esistente")
-
-    # Province senza TAF (sistema Tavolare)
-    if sigla in PROVINCE_SENZA_TAF:
-        return (sigla, False, "sistema Tavolare (no TAF)")
 
     # Province nuove → dati in provincia madre
     if sigla in PROVINCE_NUOVE:
