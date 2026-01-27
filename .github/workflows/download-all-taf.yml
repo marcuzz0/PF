@@ -72,7 +72,8 @@ jobs:
             echo "Nessun nuovo file da committare"
           else
             git commit -m "chore: Add TAF files (automated)"
-            echo "=== PUSH ==="
+            echo "=== PULL & PUSH ==="
+            git pull --rebase origin claude/cadastral-points-automation-niqBl
             git push -v origin claude/cadastral-points-automation-niqBl
           fi
 
