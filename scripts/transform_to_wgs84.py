@@ -12,6 +12,8 @@ import csv
 import json
 import re
 import sys
+import zipfile
+from io import BytesIO
 from pathlib import Path
 
 try:
@@ -35,10 +37,21 @@ def parse_taf_line(line: str, provincia: str) -> dict | None:
     if len(line) < 50:
         return None
 
-    # Regex per estrarre coordinate
-    # Formato: ... NNNNNNNN.NNN EEEEEEE.EE QQQ.QQAAPP ...
+    # Estrai identificativo (primi caratteri): FOGLIO NUMERO ALLEGATO
+    id_match = re.match(r'^([A-Z0-9]+)\s+(\d+)\s+(\d+)', line)
+    if not id_match:
+        return None
+
+    foglio = id_match.group(1)
+    numero = id_match.group(2)
+    allegato = id_match.group(3)
+    identificativo = f"PF{allegato.zfill(2)}/{numero.zfill(4)}/{foglio}"
+
+    # Trova coordinate - due numeri decimali consecutivi
+    # Formato Gauss-Boaga: NNNNNNNN.NNN EEEEEEE.EE
+    # Formato Cassini-Soldner: NNNN.NNN EEE.EEE (numeri più piccoli)
     coord_match = re.search(
-        r'(\d{7,8}(?:\.\d+)?)\s+(\d{6,7}(?:\.\d+)?)\s+(-?\d{1,3}\.\d{2})(\d{2})(\d{2})',
+        r'(-?\d{1,8}\.\d{1,3})\s+(-?\d{1,8}\.\d{1,3})\s+(\d{1,3})',
         line
     )
 
@@ -49,17 +62,6 @@ def parse_taf_line(line: str, provincia: str) -> dict | None:
         coord_nord = float(coord_match.group(1))
         coord_est = float(coord_match.group(2))
         quota = float(coord_match.group(3))
-
-        # Estrai identificativo (primi caratteri)
-        id_match = re.match(r'^([A-Z0-9]+\s+\d+\s+\d+)', line)
-        if id_match:
-            parts = id_match.group(1).split()
-            foglio = parts[0] if len(parts) > 0 else ""
-            numero = parts[1] if len(parts) > 1 else ""
-            allegato = parts[2] if len(parts) > 2 else "0"
-            identificativo = f"PF{allegato.zfill(2)}/{numero.zfill(4)}/{foglio}"
-        else:
-            identificativo = f"PF_{provincia}_{coord_nord:.0f}"
 
         return {
             "identificativo": identificativo,
@@ -72,14 +74,20 @@ def parse_taf_line(line: str, provincia: str) -> dict | None:
         return None
 
 
-def convert_to_wgs84(coord_est: float, coord_nord: float) -> tuple[float, float] | None:
-    """Converte coordinate Gauss-Boaga in WGS84."""
+def convert_to_wgs84(coord_est: float, coord_nord: float, provincia: str = None) -> tuple[float, float] | None:
+    """Converte coordinate in WGS84."""
     try:
-        # Determina fuso in base a Est
-        if 1_300_000 < coord_est < 1_999_999:
+        # Gauss-Boaga Ovest (Est tra 1.3M e 2M, Nord > 4M)
+        if 1_300_000 < coord_est < 1_999_999 and coord_nord > 4_000_000:
             lon, lat = transformer_ovest.transform(coord_est, coord_nord)
-        elif 2_200_000 < coord_est < 2_999_999:
+        # Gauss-Boaga Est (Est tra 2.2M e 2.9M, Nord > 4M)
+        elif 2_200_000 < coord_est < 2_999_999 and coord_nord > 4_000_000:
             lon, lat = transformer_est.transform(coord_est, coord_nord)
+        # Cassini-Soldner (coordinate piccole) - richiede origine
+        elif abs(coord_nord) < 100_000 and abs(coord_est) < 100_000:
+            # Per Cassini-Soldner servono le origini catastali
+            # TODO: implementare conversione completa
+            return None
         else:
             return None
 
@@ -97,7 +105,24 @@ def process_taf_file(taf_path: Path) -> list[dict]:
     punti = []
 
     try:
-        content = taf_path.read_text(encoding='latin-1', errors='ignore')
+        raw_content = taf_path.read_bytes()
+
+        # Se è un file ZIP, estrai il contenuto
+        if raw_content[:2] == b"PK":
+            try:
+                with zipfile.ZipFile(BytesIO(raw_content)) as zf:
+                    for name in zf.namelist():
+                        if name.upper().endswith(".TAF"):
+                            content = zf.read(name).decode('latin-1', errors='ignore')
+                            break
+                    else:
+                        print(f"  Nessun .TAF trovato nel ZIP")
+                        return punti
+            except zipfile.BadZipFile:
+                content = raw_content.decode('latin-1', errors='ignore')
+        else:
+            content = raw_content.decode('latin-1', errors='ignore')
+
         for line in content.splitlines():
             punto = parse_taf_line(line, provincia)
             if punto:
