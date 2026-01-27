@@ -260,14 +260,14 @@ def main():
     # Calcola totali finali
     totale_scaricati = len(list(output_dir.glob("*.TAF")))
     total_size = sum(f.stat().st_size for f in output_dir.glob("*.TAF"))
-    print(f"TOTALE PROVINCE: {totale_scaricati}/107")
+    print(f"TOTALE PROVINCE: {totale_scaricati}/103 (4 nuove in province madri)")
     print(f"Dimensione totale: {total_size/1024/1024:.1f} MB")
     print()
 
     if failed:
         print("Per ritentare le province fallite, rilancia lo script.")
-    elif totale_scaricati == 107:
-        print("Tutte le 107 province scaricate con successo!")
+    elif totale_scaricati >= 103:
+        print("Tutte le 103 province con TAF scaricate!")
 
 
 if __name__ == "__main__":
