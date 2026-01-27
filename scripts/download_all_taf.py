@@ -72,9 +72,9 @@ def download_taf(sigla: str, output_dir: Path, session: requests.Session) -> tup
     url = f"https://www1.agenziaentrate.gov.it/servizi/TafDis/download.php?&tipofile=TAF&iduff={iduff}"
 
     # Riprova più volte - il server AdE è instabile
-    for attempt in range(5):
+    for attempt in range(1):  # Un solo tentativo, i mancanti si riscaricano al prossimo run
         try:
-            time.sleep(3)  # Delay tra tentativi
+            time.sleep(1)  # 1 secondo di pausa
             response = session.get(url, timeout=60)
 
             if response.status_code == 200 and len(response.content) > 500:
@@ -95,7 +95,6 @@ def download_taf(sigla: str, output_dir: Path, session: requests.Session) -> tup
                                 return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (AdE)")
 
         except Exception:
-            time.sleep(3)  # Pausa extra in caso di errore
             continue
 
     # Fallback: Altervista
@@ -162,7 +161,7 @@ def main():
             print(f"FALLITO ({msg})")
             failed.append(sigla)
 
-        time.sleep(2)  # Rate limiting - il server AdE richiede pause più lunghe
+        time.sleep(1)  # Rate limiting
 
     print()
     print("=" * 60)
