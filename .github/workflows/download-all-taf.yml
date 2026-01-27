@@ -16,6 +16,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: claude/cadastral-points-automation-niqBl
+          fetch-depth: 0  # Fetch tutto per avere i file esistenti
+
+      - name: Check existing TAF files
+        run: |
+          echo "=== FILE TAF GIÀ PRESENTI ==="
+          ls -la data/taf/*.TAF 2>/dev/null | wc -l | xargs echo "Totale esistenti:"
+          ls data/taf/*.TAF 2>/dev/null || echo "Nessun file esistente"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -34,8 +41,18 @@ jobs:
 
       - name: Show results
         run: |
-          echo "=== FILE SCARICATI ==="
-          ls -la data/taf/*.TAF 2>/dev/null | wc -l | xargs echo "Totale:"
+          echo "=== RISULTATO FINALE ==="
+          TOTAL=$(ls data/taf/*.TAF 2>/dev/null | wc -l)
+          echo "Totale file TAF: $TOTAL / 107 province"
+          if [ "$TOTAL" -eq 107 ]; then
+            echo "✅ TUTTE LE PROVINCE SCARICATE!"
+          else
+            MISSING=$((107 - TOTAL))
+            echo "⚠️ Mancano $MISSING province"
+            echo "Rilancia il workflow per riprovare i file mancanti"
+          fi
+          echo ""
+          echo "=== ELENCO FILE ==="
           ls -la data/taf/*.TAF 2>/dev/null || echo "Nessun file"
 
       - name: Commit and push
