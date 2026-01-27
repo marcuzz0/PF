@@ -31,6 +31,68 @@ CRS_GB_EST = CRS.from_epsg(3004)
 transformer_ovest = Transformer.from_crs(CRS_GB_OVEST, CRS_WGS84, always_xy=True)
 transformer_est = Transformer.from_crs(CRS_GB_EST, CRS_WGS84, always_xy=True)
 
+# Origini catastali per Cassini-Soldner: (Nord GB, Est GB, Fuso)
+ORIGINI = {
+    # Piemonte/Valle d'Aosta
+    "TO": (4994000, 1402000, 1), "AT": (4994000, 1402000, 1), "CN": (4994000, 1402000, 1),
+    "BI": (4994000, 1402000, 1), "VC": (4994000, 1402000, 1), "NO": (4994000, 1402000, 1),
+    "VB": (4994000, 1402000, 1), "AO": (5068000, 1368000, 1), "AL": (4960000, 1470000, 1),
+    # Lombardia
+    "MI": (5032000, 1514000, 1), "CO": (5032000, 1514000, 1), "VA": (5032000, 1514000, 1),
+    "LC": (5032000, 1514000, 1), "MB": (5032000, 1514000, 1), "LO": (5032000, 1514000, 1),
+    "PV": (5032000, 1514000, 1), "SO": (5032000, 1514000, 1),
+    "BG": (5042000, 1596000, 1), "BS": (5042000, 1596000, 1), "CR": (5042000, 1596000, 1),
+    "MN": (4996000, 1632000, 1),
+    # Veneto/Friuli
+    "VE": (5034000, 2308000, 2), "PD": (5034000, 2308000, 2), "TV": (5034000, 2308000, 2),
+    "BL": (5034000, 2308000, 2), "RO": (5034000, 2308000, 2),
+    "VR": (5024000, 1660000, 1), "VI": (5024000, 1660000, 1),
+    "UD": (5104000, 2382000, 2), "PN": (5104000, 2382000, 2), "GO": (5104000, 2382000, 2),
+    "TS": (5104000, 2382000, 2),
+    # Trentino
+    "TN": (5105000, 1668000, 1), "BZ": (5105000, 1668000, 1),
+    # Emilia-Romagna
+    "BO": (4925000, 1686000, 1), "MO": (4925000, 1686000, 1), "RE": (4925000, 1686000, 1),
+    "RA": (4925000, 1686000, 1), "FC": (4925000, 1686000, 1), "RN": (4925000, 1686000, 1),
+    "FE": (4967000, 1726000, 1), "PR": (4960000, 1586000, 1), "PC": (4960000, 1586000, 1),
+    # Liguria
+    "GE": (4914000, 1492000, 1), "SP": (4914000, 1492000, 1), "SV": (4914000, 1492000, 1),
+    "IM": (4914000, 1492000, 1),
+    # Toscana
+    "FI": (4850000, 1680000, 1), "PT": (4850000, 1680000, 1), "PO": (4850000, 1680000, 1),
+    "AR": (4850000, 1680000, 1), "PI": (4843000, 1612000, 1), "LI": (4843000, 1612000, 1),
+    "LU": (4843000, 1612000, 1), "MS": (4843000, 1612000, 1), "SI": (4800000, 1698000, 1),
+    "GR": (4800000, 1698000, 1),
+    # Umbria/Marche
+    "PG": (4770000, 1782000, 1), "TR": (4770000, 1782000, 1),
+    "AN": (4822000, 2376000, 2), "PU": (4822000, 2376000, 2), "MC": (4822000, 2376000, 2),
+    "AP": (4822000, 2376000, 2), "FM": (4822000, 2376000, 2),
+    # Lazio
+    "RM": (4642000, 1788000, 1), "VT": (4642000, 1788000, 1), "RI": (4642000, 1788000, 1),
+    "LT": (4642000, 1788000, 1), "FR": (4642000, 1788000, 1),
+    # Abruzzo/Molise
+    "AQ": (4688000, 2370000, 2), "TE": (4688000, 2370000, 2), "PE": (4688000, 2370000, 2),
+    "CH": (4688000, 2370000, 2), "CB": (4610000, 2486000, 2), "IS": (4610000, 2486000, 2),
+    # Campania
+    "NA": (4526000, 2440000, 2), "CE": (4526000, 2440000, 2), "BN": (4526000, 2440000, 2),
+    "AV": (4526000, 2440000, 2), "SA": (4498000, 2492000, 2),
+    # Puglia
+    "BA": (4560000, 2672000, 2), "FG": (4560000, 2672000, 2), "BT": (4560000, 2672000, 2),
+    "TA": (4560000, 2672000, 2), "BR": (4560000, 2672000, 2), "LE": (4456000, 2778000, 2),
+    # Basilicata
+    "PZ": (4496000, 2566000, 2), "MT": (4496000, 2566000, 2),
+    # Calabria
+    "CZ": (4314000, 2634000, 2), "CS": (4314000, 2634000, 2), "KR": (4314000, 2634000, 2),
+    "VV": (4314000, 2634000, 2), "RC": (4218000, 2564000, 2),
+    # Sicilia
+    "PA": (4222000, 2360000, 2), "TP": (4222000, 2360000, 2), "AG": (4222000, 2360000, 2),
+    "CL": (4222000, 2360000, 2), "EN": (4222000, 2360000, 2), "CT": (4222000, 2360000, 2),
+    "ME": (4222000, 2360000, 2), "SR": (4222000, 2360000, 2), "RG": (4222000, 2360000, 2),
+    # Sardegna
+    "CA": (4338000, 1512000, 1), "OR": (4338000, 1512000, 1), "NU": (4338000, 1512000, 1),
+    "SS": (4338000, 1512000, 1), "SU": (4338000, 1512000, 1),
+}
+
 
 def parse_taf_line(line: str, provincia: str) -> dict | None:
     """Parsa una linea TAF ed estrae i dati."""
@@ -75,7 +137,12 @@ def parse_taf_line(line: str, provincia: str) -> dict | None:
 
 
 def convert_to_wgs84(coord_est: float, coord_nord: float, provincia: str = None) -> tuple[float, float] | None:
-    """Converte coordinate in WGS84."""
+    """Converte coordinate in WGS84.
+
+    Supporta:
+    - Gauss-Boaga (coordinate grandi, >1M)
+    - Cassini-Soldner (coordinate piccole, <100K) con origine catastale
+    """
     try:
         # Gauss-Boaga Ovest (Est tra 1.3M e 2M, Nord > 4M)
         if 1_300_000 < coord_est < 1_999_999 and coord_nord > 4_000_000:
@@ -83,11 +150,23 @@ def convert_to_wgs84(coord_est: float, coord_nord: float, provincia: str = None)
         # Gauss-Boaga Est (Est tra 2.2M e 2.9M, Nord > 4M)
         elif 2_200_000 < coord_est < 2_999_999 and coord_nord > 4_000_000:
             lon, lat = transformer_est.transform(coord_est, coord_nord)
-        # Cassini-Soldner (coordinate piccole) - richiede origine
+        # Cassini-Soldner (coordinate piccole) - converti via origine catastale
         elif abs(coord_nord) < 100_000 and abs(coord_est) < 100_000:
-            # Per Cassini-Soldner servono le origini catastali
-            # TODO: implementare conversione completa
-            return None
+            if not provincia or provincia not in ORIGINI:
+                return None
+
+            # Ottieni origine catastale per questa provincia
+            origine_nord, origine_est, fuso = ORIGINI[provincia]
+
+            # Converti da CS locale a Gauss-Boaga aggiungendo l'origine
+            gb_nord = origine_nord + coord_nord
+            gb_est = origine_est + coord_est
+
+            # Trasforma in WGS84 usando il fuso corretto
+            if fuso == 1:
+                lon, lat = transformer_ovest.transform(gb_est, gb_nord)
+            else:
+                lon, lat = transformer_est.transform(gb_est, gb_nord)
         else:
             return None
 
@@ -126,7 +205,7 @@ def process_taf_file(taf_path: Path) -> list[dict]:
         for line in content.splitlines():
             punto = parse_taf_line(line, provincia)
             if punto:
-                wgs84 = convert_to_wgs84(punto["coord_est"], punto["coord_nord"])
+                wgs84 = convert_to_wgs84(punto["coord_est"], punto["coord_nord"], provincia)
                 if wgs84:
                     punto["lat_wgs84"] = round(wgs84[0], 6)
                     punto["lon_wgs84"] = round(wgs84[1], 6)
