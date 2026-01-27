@@ -58,6 +58,25 @@ PROVINCE = {
     "VI": "Vicenza", "VT": "Viterbo",
 }
 
+# Codici ufficio AdE alternativi per alcune province
+# Fonte: pagine uffici territoriali AdE
+CODICI_UFFICIO_ADE = {
+    "AR": ["AR1", "JC1"],      # Arezzo
+    "FC": ["FC1", "KC1"],      # Forlì-Cesena
+    "PU": ["PU1", "KA5"],      # Pesaro-Urbino
+}
+
+# Province senza TAF (sistema catastale Tavolare)
+PROVINCE_SENZA_TAF = {"BZ", "TN"}
+
+# Province nuove i cui dati sono nelle province madri
+PROVINCE_NUOVE = {
+    "BT": "BA",  # Barletta-Andria-Trani → Bari
+    "FM": "AP",  # Fermo → Ascoli Piceno
+    "MB": "MI",  # Monza-Brianza → Milano
+    "SU": "CA",  # Sud Sardegna → Cagliari
+}
+
 
 def download_taf(sigla: str, output_dir: Path, session: requests.Session) -> tuple[str, bool, str]:
     """Scarica TAF per una provincia. Ritorna (sigla, success, message)."""
@@ -66,36 +85,47 @@ def download_taf(sigla: str, output_dir: Path, session: requests.Session) -> tup
     if output_file.exists():
         return (sigla, True, "già esistente")
 
+    # Province senza TAF (sistema Tavolare)
+    if sigla in PROVINCE_SENZA_TAF:
+        return (sigla, False, "sistema Tavolare (no TAF)")
+
+    # Province nuove → dati in provincia madre
+    if sigla in PROVINCE_NUOVE:
+        madre = PROVINCE_NUOVE[sigla]
+        return (sigla, False, f"dati in {madre}")
+
     # AdE (Agenzia delle Entrate) - fonte ufficiale
-    # URL: https://www1.agenziaentrate.gov.it/servizi/TafDis/download.php?&tipofile=TAF&iduff=AG1
-    iduff = f"{sigla}1"
-    url = f"https://www1.agenziaentrate.gov.it/servizi/TafDis/download.php?&tipofile=TAF&iduff={iduff}"
+    # Prova codici ufficio alternativi se disponibili
+    codici = CODICI_UFFICIO_ADE.get(sigla, [f"{sigla}1"])
 
-    # Riprova più volte - il server AdE è instabile
-    for attempt in range(5):  # 5 tentativi per provincia
-        try:
-            time.sleep(1)  # 1 secondo di pausa
-            response = session.get(url, timeout=60)
+    for iduff in codici:
+        url = f"https://www1.agenziaentrate.gov.it/servizi/TafDis/download.php?&tipofile=TAF&iduff={iduff}"
 
-            if response.status_code == 200 and len(response.content) > 500:
-                content = response.content
+        # Riprova più volte - il server AdE è instabile
+        for attempt in range(5):
+            try:
+                time.sleep(1)
+                response = session.get(url, timeout=60)
 
-                # Verifica che sia un TAF valido (inizia con codice foglio)
-                if content[:1].isalpha() or content[:1].isdigit():
-                    output_file.write_bytes(content)
-                    return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (AdE)")
+                if response.status_code == 200 and len(response.content) > 500:
+                    content = response.content
 
-                # ZIP file
-                if content[:2] == b"PK":
-                    with zipfile.ZipFile(BytesIO(content)) as zf:
-                        for name in zf.namelist():
-                            if name.upper().endswith(".TAF"):
-                                with zf.open(name) as f:
-                                    output_file.write_bytes(f.read())
-                                return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (AdE)")
+                    # Verifica che sia un TAF valido (inizia con codice foglio)
+                    if content[:1].isalpha() or content[:1].isdigit():
+                        output_file.write_bytes(content)
+                        return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (AdE {iduff})")
 
-        except Exception:
-            continue
+                    # ZIP file
+                    if content[:2] == b"PK":
+                        with zipfile.ZipFile(BytesIO(content)) as zf:
+                            for name in zf.namelist():
+                                if name.upper().endswith(".TAF"):
+                                    with zf.open(name) as f:
+                                        output_file.write_bytes(f.read())
+                                    return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (AdE {iduff})")
+
+            except Exception:
+                continue
 
     # Fallback: Altervista
     url = "http://fiduciali.altervista.org/download_taf.php"
