@@ -145,6 +145,28 @@ def download_taf(sigla: str, output_dir: Path, session: requests.Session) -> tup
     except Exception:
         pass
 
+    # Fallback 3: Meridiana Office
+    url = f"http://www.meridianaoffice.com/fiducialipuntonewwrap.php?provincia={sigla}"
+    try:
+        response = session.get(url, timeout=60)
+
+        if response.status_code == 200 and len(response.content) > 500:
+            content = response.content
+
+            if content[:2] == b"PK":
+                with zipfile.ZipFile(BytesIO(content)) as zf:
+                    for name in zf.namelist():
+                        if name.upper().endswith(".TAF"):
+                            with zf.open(name) as f:
+                                output_file.write_bytes(f.read())
+                            return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (MO)")
+            elif content[:1].isalpha() or content[:1].isdigit():
+                output_file.write_bytes(content)
+                return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (MO)")
+
+    except Exception:
+        pass
+
     return (sigla, False, "nessuna fonte disponibile")
 
 
