@@ -78,6 +78,10 @@ venv.bak/
 !data/taf/
 !data/taf/*.TAF
 
+# Allow DIS files in data/dis/
+!data/dis/
+!data/dis/*.DIS
+
 # Allow WGS84 output
 !data/wgs84/
 !data/wgs84/*.csv.gz
