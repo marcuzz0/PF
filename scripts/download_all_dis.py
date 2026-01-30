@@ -87,13 +87,10 @@ def download_dis(sigla: str, output_dir: Path, session: requests.Session) -> tup
                 time.sleep(1)
                 response = session.get(url, timeout=60)
 
-                if response.status_code == 200 and len(response.content) > 500:
+                if response.status_code == 200 and len(response.content) > 100:
                     content = response.content
 
-                    if content[:1].isalpha() or content[:1].isdigit():
-                        output_file.write_bytes(content)
-                        return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (AdE {iduff})")
-
+                    # ZIP file
                     if content[:2] == b"PK":
                         with zipfile.ZipFile(BytesIO(content)) as zf:
                             for name in zf.namelist():
@@ -101,8 +98,19 @@ def download_dis(sigla: str, output_dir: Path, session: requests.Session) -> tup
                                     with zf.open(name) as f:
                                         output_file.write_bytes(f.read())
                                     return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (AdE {iduff})")
+                            # Se non trova .DIS, prova primo file
+                            for name in zf.namelist():
+                                with zf.open(name) as f:
+                                    output_file.write_bytes(f.read())
+                                return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (AdE {iduff})")
 
-            except Exception:
+                    # File di testo (non HTML)
+                    if not content.startswith(b'<!') and not content.startswith(b'<html'):
+                        output_file.write_bytes(content)
+                        return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (AdE {iduff})")
+
+            except Exception as e:
+                print(f"[err: {e}] ", end="")
                 continue
 
     return (sigla, False, "nessuna fonte disponibile")
