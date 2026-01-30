@@ -80,7 +80,7 @@ venv.bak/
 
 # Allow DIS files in data/dis/
 !data/dis/
-!data/dis/*.DIS
+!data/dis/*.DIST
 
 # Allow WGS84 output
 !data/wgs84/

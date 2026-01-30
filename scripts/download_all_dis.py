@@ -68,7 +68,7 @@ PROVINCE_NUOVE = {
 
 def download_dis(sigla: str, output_dir: Path, session: requests.Session) -> tuple[str, bool, str]:
     """Scarica DIS per una provincia."""
-    output_file = output_dir / f"{sigla}.DIS"
+    output_file = output_dir / f"{sigla}.DIST"
 
     if output_file.exists():
         return (sigla, True, "già esistente")
@@ -118,7 +118,7 @@ def main():
     print("DOWNLOAD DIS - Distanze Misurate Italia")
     print("=" * 60)
 
-    esistenti = {f.stem.upper() for f in output_dir.glob("*.DIS")}
+    esistenti = {f.stem.upper() for f in output_dir.glob("*.DIST")}
     tutte = set(PROVINCE.keys())
     mancanti = sorted(tutte - esistenti)
 
@@ -130,7 +130,7 @@ def main():
 
     if not mancanti:
         print("Tutti i file DIS sono già scaricati!")
-        total_size = sum(f.stat().st_size for f in output_dir.glob("*.DIS"))
+        total_size = sum(f.stat().st_size for f in output_dir.glob("*.DIST"))
         print(f"Dimensione totale: {total_size/1024/1024:.1f} MB")
         return
 
@@ -169,8 +169,8 @@ def main():
     if failed:
         print(f"FALLITI: {', '.join(failed)}")
 
-    totale_scaricati = len(list(output_dir.glob("*.DIS")))
-    total_size = sum(f.stat().st_size for f in output_dir.glob("*.DIS"))
+    totale_scaricati = len(list(output_dir.glob("*.DIST")))
+    total_size = sum(f.stat().st_size for f in output_dir.glob("*.DIST"))
     print(f"TOTALE PROVINCE: {totale_scaricati}/103")
     print(f"Dimensione totale: {total_size/1024/1024:.1f} MB")
 

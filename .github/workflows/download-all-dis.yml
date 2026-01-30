@@ -22,8 +22,8 @@ jobs:
       - name: Check existing DIS files
         run: |
           echo "=== FILE DIS GIÀ PRESENTI ==="
-          ls -la data/dis/*.DIS 2>/dev/null | wc -l | xargs echo "Totale esistenti:"
-          ls data/dis/*.DIS 2>/dev/null || echo "Nessun file esistente"
+          ls -la data/dis/*.DIST 2>/dev/null | wc -l | xargs echo "Totale esistenti:"
+          ls data/dis/*.DIST 2>/dev/null || echo "Nessun file esistente"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -43,7 +43,7 @@ jobs:
       - name: Show results
         run: |
           echo "=== RISULTATO FINALE ==="
-          TOTAL=$(ls data/dis/*.DIS 2>/dev/null | wc -l)
+          TOTAL=$(ls data/dis/*.DIST 2>/dev/null | wc -l)
           echo "Totale file DIS: $TOTAL / 103 province"
           if [ "$TOTAL" -ge 103 ]; then
             echo "✅ TUTTE LE PROVINCE SCARICATE!"
@@ -53,13 +53,13 @@ jobs:
           fi
           echo ""
           echo "=== ELENCO FILE ==="
-          ls -la data/dis/*.DIS 2>/dev/null || echo "Nessun file"
+          ls -la data/dis/*.DIST 2>/dev/null || echo "Nessun file"
 
       - name: Commit and push
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-          git add data/dis/*.DIS 2>/dev/null || true
+          git add data/dis/*.DIST 2>/dev/null || true
           if git diff --staged --quiet; then
             echo "Nessun nuovo file da committare"
           else
@@ -72,6 +72,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dis-files-all
-          path: data/dis/*.DIS
+          path: data/dis/*.DIST
           retention-days: 30
           if-no-files-found: warn
