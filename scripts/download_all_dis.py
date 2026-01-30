@@ -77,61 +77,35 @@ def download_dis(sigla: str, output_dir: Path, session: requests.Session) -> tup
         madre = PROVINCE_NUOVE[sigla]
         return (sigla, False, f"dati in {madre}")
 
-    # Fonte 1: Altervista (ha i DIS)
-    url = "http://fiduciali.altervista.org/download_taf.php"
-    try:
-        response = session.post(
-            url,
-            data={"provincia": sigla, "tipo": "dis"},
-            timeout=60,
-        )
+    # AdE - tipofile=DIST (non DIS!)
+    codici = CODICI_UFFICIO_ADE.get(sigla, [f"{sigla}1"])
 
-        if response.status_code == 200 and len(response.content) > 100:
-            content = response.content
+    for iduff in codici:
+        url = f"http://www1.agenziaentrate.gov.it/servizi/TafDis/download.php?&tipofile=DIST&iduff={iduff}"
 
-            # ZIP file
-            if content[:2] == b"PK":
-                with zipfile.ZipFile(BytesIO(content)) as zf:
-                    for name in zf.namelist():
-                        if name.upper().endswith(".DIS"):
-                            with zf.open(name) as f:
-                                output_file.write_bytes(f.read())
-                            return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (Altervista)")
-                    # Se non trova .DIS, prova primo file
-                    for name in zf.namelist():
-                        with zf.open(name) as f:
-                            output_file.write_bytes(f.read())
-                        return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (Altervista)")
+        for attempt in range(5):
+            try:
+                time.sleep(1)
+                response = session.get(url, timeout=60)
 
-            # File di testo (non HTML)
-            if not content.startswith(b'<!') and not content.startswith(b'<html') and not content.startswith(b'<HTML'):
-                output_file.write_bytes(content)
-                return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (Altervista)")
+                if response.status_code == 200 and len(response.content) > 100:
+                    content = response.content
 
-    except Exception as e:
-        print(f"[Altervista err: {e}] ", end="")
+                    # ZIP file
+                    if content[:2] == b"PK":
+                        with zipfile.ZipFile(BytesIO(content)) as zf:
+                            for name in zf.namelist():
+                                with zf.open(name) as f:
+                                    output_file.write_bytes(f.read())
+                                return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (AdE {iduff})")
 
-    # Fonte 2: La Terra Misurata
-    url = f"http://www.laterramisurata.com/tafmisurate.php?provincia={sigla}&tipo=dis"
-    try:
-        response = session.get(url, timeout=60)
+                    # File di testo (non HTML)
+                    if not content.startswith(b'<!') and not content.startswith(b'<html') and not content.startswith(b'<HTML'):
+                        output_file.write_bytes(content)
+                        return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (AdE {iduff})")
 
-        if response.status_code == 200 and len(response.content) > 100:
-            content = response.content
-
-            if content[:2] == b"PK":
-                with zipfile.ZipFile(BytesIO(content)) as zf:
-                    for name in zf.namelist():
-                        with zf.open(name) as f:
-                            output_file.write_bytes(f.read())
-                        return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (LTM)")
-
-            if not content.startswith(b'<!') and not content.startswith(b'<html'):
-                output_file.write_bytes(content)
-                return (sigla, True, f"{output_file.stat().st_size/1024:.1f}KB (LTM)")
-
-    except Exception as e:
-        print(f"[LTM err: {e}] ", end="")
+            except Exception as e:
+                continue
 
     return (sigla, False, "nessuna fonte disponibile")
 
