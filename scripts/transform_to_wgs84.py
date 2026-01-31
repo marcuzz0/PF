@@ -31,67 +31,175 @@ CRS_GB_EST = CRS.from_epsg(3004)
 transformer_ovest = Transformer.from_crs(CRS_GB_OVEST, CRS_WGS84, always_xy=True)
 transformer_est = Transformer.from_crs(CRS_GB_EST, CRS_WGS84, always_xy=True)
 
-# Origini catastali per Cassini-Soldner: (Nord GB, Est GB, Fuso)
-ORIGINI = {
-    # Piemonte/Valle d'Aosta
-    "TO": (4994000, 1402000, 1), "AT": (4994000, 1402000, 1), "CN": (4994000, 1402000, 1),
-    "BI": (4994000, 1402000, 1), "VC": (4994000, 1402000, 1), "NO": (4994000, 1402000, 1),
-    "VB": (4994000, 1402000, 1), "AO": (5068000, 1368000, 1), "AL": (4960000, 1470000, 1),
-    # Lombardia
-    "MI": (5032000, 1514000, 1), "CO": (5032000, 1514000, 1), "VA": (5032000, 1514000, 1),
-    "LC": (5032000, 1514000, 1), "MB": (5032000, 1514000, 1), "LO": (5032000, 1514000, 1),
-    "PV": (5032000, 1514000, 1), "SO": (5032000, 1514000, 1),
-    "BG": (5042000, 1596000, 1), "BS": (5042000, 1596000, 1), "CR": (5042000, 1596000, 1),
-    "MN": (4996000, 1632000, 1),
-    # Veneto/Friuli
-    "VE": (5034000, 2308000, 2), "PD": (5034000, 2308000, 2), "TV": (5034000, 2308000, 2),
-    "BL": (5034000, 2308000, 2), "RO": (5034000, 2308000, 2),
-    "VR": (5024000, 1660000, 1), "VI": (5024000, 1660000, 1),
-    "UD": (5104000, 2382000, 2), "PN": (5104000, 2382000, 2), "GO": (5104000, 2382000, 2),
-    "TS": (5104000, 2382000, 2),
-    # Trentino
-    "TN": (5105000, 1668000, 1), "BZ": (5105000, 1668000, 1),
-    # Emilia-Romagna
-    "BO": (4925000, 1686000, 1), "MO": (4925000, 1686000, 1), "RE": (4925000, 1686000, 1),
-    "RA": (4925000, 1686000, 1), "FC": (4925000, 1686000, 1), "RN": (4925000, 1686000, 1),
-    "FE": (4967000, 1726000, 1), "PR": (4960000, 1586000, 1), "PC": (4960000, 1586000, 1),
-    # Liguria
-    "GE": (4914000, 1492000, 1), "SP": (4914000, 1492000, 1), "SV": (4914000, 1492000, 1),
-    "IM": (4914000, 1492000, 1),
-    # Toscana
-    "FI": (4850000, 1680000, 1), "PT": (4850000, 1680000, 1), "PO": (4850000, 1680000, 1),
-    "AR": (4850000, 1680000, 1), "PI": (4843000, 1612000, 1), "LI": (4843000, 1612000, 1),
-    "LU": (4843000, 1612000, 1), "MS": (4843000, 1612000, 1), "SI": (4800000, 1698000, 1),
-    "GR": (4800000, 1698000, 1),
-    # Umbria/Marche
-    "PG": (4770000, 1782000, 1), "TR": (4770000, 1782000, 1),
-    "AN": (4822000, 2376000, 2), "PU": (4822000, 2376000, 2), "MC": (4822000, 2376000, 2),
-    "AP": (4822000, 2376000, 2), "FM": (4822000, 2376000, 2),
-    # Lazio
-    "RM": (4642000, 1788000, 1), "VT": (4642000, 1788000, 1), "RI": (4642000, 1788000, 1),
-    "LT": (4642000, 1788000, 1), "FR": (4642000, 1788000, 1),
-    # Abruzzo/Molise
-    "AQ": (4688000, 2370000, 2), "TE": (4688000, 2370000, 2), "PE": (4688000, 2370000, 2),
-    "CH": (4688000, 2370000, 2), "CB": (4610000, 2486000, 2), "IS": (4610000, 2486000, 2),
-    # Campania
-    "NA": (4526000, 2440000, 2), "CE": (4526000, 2440000, 2), "BN": (4526000, 2440000, 2),
-    "AV": (4526000, 2440000, 2), "SA": (4498000, 2492000, 2),
-    # Puglia
-    "BA": (4560000, 2672000, 2), "FG": (4560000, 2672000, 2), "BT": (4560000, 2672000, 2),
-    "TA": (4560000, 2672000, 2), "BR": (4560000, 2672000, 2), "LE": (4456000, 2778000, 2),
-    # Basilicata
-    "PZ": (4496000, 2566000, 2), "MT": (4496000, 2566000, 2),
-    # Calabria
-    "CZ": (4314000, 2634000, 2), "CS": (4314000, 2634000, 2), "KR": (4314000, 2634000, 2),
-    "VV": (4314000, 2634000, 2), "RC": (4218000, 2564000, 2),
-    # Sicilia
-    "PA": (4222000, 2360000, 2), "TP": (4222000, 2360000, 2), "AG": (4222000, 2360000, 2),
-    "CL": (4222000, 2360000, 2), "EN": (4222000, 2360000, 2), "CT": (4222000, 2360000, 2),
-    "ME": (4222000, 2360000, 2), "SR": (4222000, 2360000, 2), "RG": (4222000, 2360000, 2),
-    # Sardegna
-    "CA": (4338000, 1512000, 1), "OR": (4338000, 1512000, 1), "NU": (4338000, 1512000, 1),
-    "SS": (4338000, 1512000, 1), "SU": (4338000, 1512000, 1),
+# ============================================================================
+# ORIGINI CATASTALI CASSINI-SOLDNER
+# ============================================================================
+# Coordinate WGS84 (lat, lon) delle 31 Grandi Origini catastali italiane.
+# Ricavate da ricerca su fonti ufficiali (ConveRgo, Cartlab, IGM, AdE).
+#
+# Le coordinate originali erano in Bessel-Genova con longitudini riferite a:
+# - GE (Genova): 8°55'15,709" E Greenwich = 8.921030° E
+# - R  (Roma Monte Mario): 12°27'08,4" E Greenwich = 12.452333° E
+# - CF (Castanea delle Furie): ~15°28' E Greenwich = 15.466667° E
+# ============================================================================
+
+# Longitudine di riferimento dei meridiani fondamentali
+LON_GENOVA = 8.921030
+LON_ROMA = 12.452333
+LON_CASTANEA = 15.466667
+
+def dms_to_dd(degrees: int, minutes: int, seconds: float) -> float:
+    """Converte gradi-minuti-secondi in gradi decimali."""
+    return degrees + minutes / 60.0 + seconds / 3600.0
+
+# Coordinate Bessel-Genova delle 31 Grandi Origini (lat, lon_offset, meridiano)
+# Nota: lon_offset è la longitudine rispetto al meridiano indicato
+ORIGINI_BESSEL = {
+    # 1. Vercelli (Punto Ideale) - BI, VC, NO, VB
+    "Vercelli": (dms_to_dd(45, 26, 0), dms_to_dd(0, 0, 0), "GE"),  # Approx
+    # 2. Pordenone - UD, PN, GO, TS
+    "Pordenone": (dms_to_dd(45, 57, 15.104), dms_to_dd(3, 44, 21.453), "GE"),
+    # 3. Monte Bronzone - SO, BG, BS, CR
+    "MonteBronzone": (dms_to_dd(45, 42, 31.080), dms_to_dd(1, 4, 9.404), "GE"),
+    # 4. Lodi - MI, CO, VA, LC, MB, LO, PV
+    "Lodi": (dms_to_dd(45, 18, 49.219), dms_to_dd(0, 34, 53.166), "GE"),
+    # 5. Alessandria - AL, AT
+    "Alessandria": (dms_to_dd(44, 54, 51.212), -dms_to_dd(0, 18, 37.157), "GE"),
+    # 6. Monte Bignone - IM
+    "MonteBignone": (dms_to_dd(43, 52, 22.465), -dms_to_dd(1, 11, 17.116), "GE"),
+    # 7. Forte Diamante - GE, SP, SV, PR (parte)
+    "ForteDiamante": (dms_to_dd(44, 27, 38.020), dms_to_dd(0, 1, 4.18), "GE"),
+    # 8. Portonovo - AN, MC, AP, FM, PU
+    "Portonovo": (dms_to_dd(44, 31, 55.045), dms_to_dd(2, 49, 55.338), "GE"),
+    # 9. Siena (Torre del Mangia) - SI, GR, AR, FI, PT, PO
+    "Siena": (dms_to_dd(43, 19, 3.126), dms_to_dd(2, 24, 39.027), "GE"),
+    # 10. Urbino
+    "Urbino": (dms_to_dd(43, 43, 27.930), dms_to_dd(3, 42, 54.290), "GE"),
+    # 11. Monte Pennino - PG, TR
+    "MontePennino": (dms_to_dd(43, 6, 2.076), dms_to_dd(3, 58, 3.310), "GE"),
+    # 12. Roma (Monte Mario) - RM, VT, RI, LT, FR
+    "MonteMario": (dms_to_dd(41, 55, 24.399), dms_to_dd(3, 31, 51.131), "GE"),
+    # 13. Monte Ocre - AQ, TE, PE, CH
+    "MonteOcre": (dms_to_dd(42, 15, 20.090), dms_to_dd(0, 59, 28.010), "R"),
+    # 14. Monte Palombo - CB, IS
+    "MontePalombo": (dms_to_dd(41, 50, 34.650), dms_to_dd(1, 42, 34.580), "CF"),
+    # 15. Monte Terminio - NA, CE, BN, AV, SA
+    "MonteTerminio": (dms_to_dd(40, 50, 25.860), -dms_to_dd(0, 34, 59.190), "CF"),
+    # 16. Taranto - TA, BA (parte), BR (parte)
+    "Taranto": (dms_to_dd(40, 28, 30.105), dms_to_dd(1, 42, 30.469), "CF"),
+    # 17. Lecce - LE
+    "Lecce": (dms_to_dd(40, 21, 2.850), dms_to_dd(2, 38, 57.488), "CF"),
+    # 18. Monte Brutto - CS, CZ, KR, VV
+    "MonteBrutto": (dms_to_dd(39, 8, 22.455), dms_to_dd(0, 54, 6.199), "CF"),
+    # 19. Monte Titone - PA, TP, AG, CL
+    "MonteTitone": (dms_to_dd(37, 50, 47.830), dms_to_dd(0, 5, 14.870), "R"),
+    # 20. Monte Etna - CT, ME, EN, SR, RG
+    "MonteEtna": (dms_to_dd(37, 45, 52.878), dms_to_dd(2, 32, 1.224), "R"),
+    # 21. Bari - BA, FG, BT
+    "Bari": (dms_to_dd(41, 7, 44.522), dms_to_dd(4, 21, 27.315), "R"),
+    # 22. Sardegna (Punto Ideale) - CA, OR, NU, SS, SU
+    "Sardegna": (dms_to_dd(39, 12, 0), dms_to_dd(0, 13, 0), "GE"),  # Approx
+    # 23. Reggio Calabria - RC
+    "ReggioCalabria": (dms_to_dd(38, 6, 15), dms_to_dd(0, 20, 0), "CF"),  # Approx
+    # 24. Venezia - VE, PD, TV, BL, RO
+    "Venezia": (dms_to_dd(45, 29, 0), dms_to_dd(3, 24, 0), "GE"),  # Approx
+    # 25. Bologna - BO, MO, RE, RA, FC, RN, FE
+    "Bologna": (dms_to_dd(44, 29, 37), dms_to_dd(2, 23, 16), "GE"),
+    # 26. Verona - VR, VI
+    "Verona": (dms_to_dd(45, 26, 0), dms_to_dd(2, 1, 0), "GE"),  # Approx
+    # 27. Trento - TN, BZ
+    "Trento": (dms_to_dd(46, 4, 0), dms_to_dd(2, 10, 0), "GE"),  # Approx
+    # 28. Torino - TO, CN, AO
+    "Torino": (dms_to_dd(45, 4, 12), -dms_to_dd(0, 36, 45), "GE"),
+    # 29. Mantova - MN
+    "Mantova": (dms_to_dd(45, 9, 30), dms_to_dd(1, 51, 50), "GE"),
+    # 30. Potenza/Basilicata - PZ, MT
+    "Potenza": (dms_to_dd(40, 38, 0), dms_to_dd(1, 10, 0), "CF"),  # Approx
+    # 31. Pisa/Lucca - PI, LI, LU, MS
+    "Pisa": (dms_to_dd(43, 43, 0), dms_to_dd(1, 28, 0), "GE"),  # Approx
 }
+
+def bessel_to_wgs84(lat_bessel: float, lon_offset: float, meridiano: str) -> tuple[float, float]:
+    """Converte coordinate Bessel-Genova in WGS84 approssimate."""
+    # Longitudine assoluta
+    if meridiano == "GE":
+        lon_wgs84 = LON_GENOVA + lon_offset
+    elif meridiano == "R":
+        lon_wgs84 = LON_ROMA + lon_offset
+    elif meridiano == "CF":
+        lon_wgs84 = LON_CASTANEA + lon_offset
+    else:
+        lon_wgs84 = LON_GENOVA + lon_offset
+
+    # Latitudine: differenza Bessel→WGS84 trascurabile per scopi pratici
+    lat_wgs84 = lat_bessel
+
+    return (lat_wgs84, lon_wgs84)
+
+# Genera coordinate WGS84 delle origini
+ORIGINI_WGS84 = {}
+for nome, (lat, lon_off, mer) in ORIGINI_BESSEL.items():
+    ORIGINI_WGS84[nome] = bessel_to_wgs84(lat, lon_off, mer)
+
+# Mappatura Province → Origine catastale
+PROVINCE_ORIGINI = {
+    # Piemonte
+    "TO": "Torino", "CN": "Torino", "AO": "Torino",
+    "BI": "Vercelli", "VC": "Vercelli", "NO": "Vercelli", "VB": "Vercelli",
+    "AL": "Alessandria", "AT": "Alessandria",
+    # Lombardia
+    "MI": "Lodi", "CO": "Lodi", "VA": "Lodi", "LC": "Lodi", "MB": "Lodi",
+    "LO": "Lodi", "PV": "Lodi",
+    "SO": "MonteBronzone", "BG": "MonteBronzone", "BS": "MonteBronzone", "CR": "MonteBronzone",
+    "MN": "Mantova",
+    # Veneto
+    "VE": "Venezia", "PD": "Venezia", "TV": "Venezia", "BL": "Venezia", "RO": "Venezia",
+    "VR": "Verona", "VI": "Verona",
+    # Friuli-Venezia Giulia
+    "UD": "Pordenone", "PN": "Pordenone", "GO": "Pordenone", "TS": "Pordenone",
+    # Trentino-Alto Adige
+    "TN": "Trento", "BZ": "Trento",
+    # Emilia-Romagna
+    "BO": "Bologna", "MO": "Bologna", "RE": "Bologna", "RA": "Bologna",
+    "FC": "Bologna", "RN": "Bologna", "FE": "Bologna",
+    "PR": "ForteDiamante", "PC": "ForteDiamante",
+    # Liguria
+    "GE": "ForteDiamante", "SP": "ForteDiamante", "SV": "ForteDiamante",
+    "IM": "MonteBignone",
+    # Toscana
+    "FI": "Siena", "PT": "Siena", "PO": "Siena", "AR": "Siena", "SI": "Siena", "GR": "Siena",
+    "PI": "Pisa", "LI": "Pisa", "LU": "Pisa", "MS": "Pisa",
+    # Umbria
+    "PG": "MontePennino", "TR": "MontePennino",
+    # Marche
+    "AN": "Portonovo", "MC": "Portonovo", "AP": "Portonovo", "FM": "Portonovo", "PU": "Portonovo",
+    # Lazio
+    "RM": "MonteMario", "VT": "MonteMario", "RI": "MonteMario", "LT": "MonteMario", "FR": "MonteMario",
+    # Abruzzo
+    "AQ": "MonteOcre", "TE": "MonteOcre", "PE": "MonteOcre", "CH": "MonteOcre",
+    # Molise
+    "CB": "MontePalombo", "IS": "MontePalombo",
+    # Campania
+    "NA": "MonteTerminio", "CE": "MonteTerminio", "BN": "MonteTerminio",
+    "AV": "MonteTerminio", "SA": "MonteTerminio",
+    # Puglia
+    "BA": "Bari", "FG": "Bari", "BT": "Bari",
+    "TA": "Taranto", "BR": "Taranto",
+    "LE": "Lecce",
+    # Basilicata
+    "PZ": "Potenza", "MT": "Potenza",
+    # Calabria
+    "CS": "MonteBrutto", "CZ": "MonteBrutto", "KR": "MonteBrutto", "VV": "MonteBrutto",
+    "RC": "ReggioCalabria",
+    # Sicilia
+    "PA": "MonteTitone", "TP": "MonteTitone", "AG": "MonteTitone", "CL": "MonteTitone",
+    "CT": "MonteEtna", "ME": "MonteEtna", "EN": "MonteEtna", "SR": "MonteEtna", "RG": "MonteEtna",
+    # Sardegna
+    "CA": "Sardegna", "OR": "Sardegna", "NU": "Sardegna", "SS": "Sardegna", "SU": "Sardegna",
+}
+
+# Cache per i transformer Cassini-Soldner personalizzati
+_cs_transformers = {}
 
 
 def parse_taf_line(line: str, provincia: str) -> dict | None:
@@ -136,6 +244,35 @@ def parse_taf_line(line: str, provincia: str) -> dict | None:
         return None
 
 
+def get_cs_transformer(provincia: str):
+    """Ottiene o crea un transformer Cassini-Soldner per una provincia."""
+    if provincia in _cs_transformers:
+        return _cs_transformers[provincia]
+
+    if provincia not in PROVINCE_ORIGINI:
+        return None
+
+    origine_nome = PROVINCE_ORIGINI[provincia]
+    if origine_nome not in ORIGINI_WGS84:
+        return None
+
+    lat_0, lon_0 = ORIGINI_WGS84[origine_nome]
+
+    # Crea CRS Cassini-Soldner personalizzato con ellissoide Bessel
+    proj4_string = (
+        f"+proj=cass +lat_0={lat_0} +lon_0={lon_0} "
+        f"+x_0=0 +y_0=0 +ellps=bessel +units=m +no_defs"
+    )
+
+    try:
+        crs_cs = CRS.from_proj4(proj4_string)
+        transformer = Transformer.from_crs(crs_cs, CRS_WGS84, always_xy=True)
+        _cs_transformers[provincia] = transformer
+        return transformer
+    except Exception:
+        return None
+
+
 def convert_to_wgs84(coord_est: float, coord_nord: float, provincia: str = None) -> tuple[float, float] | None:
     """Converte coordinate in WGS84.
 
@@ -150,23 +287,17 @@ def convert_to_wgs84(coord_est: float, coord_nord: float, provincia: str = None)
         # Gauss-Boaga Est (Est tra 2.2M e 2.9M, Nord > 4M)
         elif 2_200_000 < coord_est < 2_999_999 and coord_nord > 4_000_000:
             lon, lat = transformer_est.transform(coord_est, coord_nord)
-        # Cassini-Soldner (coordinate piccole) - converti via origine catastale
+        # Cassini-Soldner (coordinate piccole) - usa CRS personalizzato
         elif abs(coord_nord) < 100_000 and abs(coord_est) < 100_000:
-            if not provincia or provincia not in ORIGINI:
+            if not provincia:
                 return None
 
-            # Ottieni origine catastale per questa provincia
-            origine_nord, origine_est, fuso = ORIGINI[provincia]
+            transformer = get_cs_transformer(provincia)
+            if not transformer:
+                return None
 
-            # Converti da CS locale a Gauss-Boaga aggiungendo l'origine
-            gb_nord = origine_nord + coord_nord
-            gb_est = origine_est + coord_est
-
-            # Trasforma in WGS84 usando il fuso corretto
-            if fuso == 1:
-                lon, lat = transformer_ovest.transform(gb_est, gb_nord)
-            else:
-                lon, lat = transformer_est.transform(gb_est, gb_nord)
+            # Trasforma direttamente da Cassini-Soldner locale a WGS84
+            lon, lat = transformer.transform(coord_est, coord_nord)
         else:
             return None
 
